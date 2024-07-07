@@ -1,0 +1,87 @@
+layui.use(function(){
+    var $ = layui.$;
+    var form = layui.form;
+    var layer = layui.layer;
+
+    form.on('switch(switchTest)', function(data) {
+        var elem = data.elem;
+        var checked = elem.checked;
+        var value = elem.value;
+        var othis = data.othis;
+        var submiturl = '';
+
+        var old_checked = checked
+        var notic = ''
+        var elem_value
+
+        if (elem.name=='status'){
+            submiturl = '{% url 'module_system:system_firewalld:firewalld_action' %}';
+        }
+        if (elem.name=='ping'){
+            submiturl = '{% url 'module_system:system_firewalld:ping-action' %}';
+        }
+
+        if (checked) {
+            old_checked = false;
+            if (elem.name=='ping'){
+                notic = '确定要 禁止ping 功能吗？？可能会造成需要ping的服务问题！';
+            }
+            if (elem.name=='status'){
+                notic = '确定开启系统防火墙吗？注意开启后会拦截端口！';
+            }
+            elem_value = 1;
+
+        } else {
+            if (elem.name=='status'){
+                notic = '确定关闭系统防火墙吗？关闭系统防火墙可能会造成安全问题。';
+            }
+            if (elem.name=='ping'){
+                notic = '确定要 允许ping 吗！';
+            }
+            elem_value = 0
+            old_checked = true;
+        }
+      layer.confirm(notic, {icon: 3, title: '系统防火墙操作确认'}, function(){
+            $.ajax({
+                type: 'get',
+                url: submiturl,
+                data: {'action': elem_value},
+                dataType: 'json',
+                success: function(result){
+                    if (result.returncode == 0){
+                        window.location.href = '{{ self_url }}';
+                    }else{
+layer.alert('操作失败！！！' + result.stdout + "|" + result.readyState + "|" + stderr, { icon: 5 });
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown){
+        layer.alert('操作失败！！！' + XMLHttpRequest.status + "|" + XMLHttpRequest.readyState + "|" + textStatus, { icon: 5 });
+          if (elem.name=='ping'){
+           form.val('formfirewalld', {
+               'ping': old_checked,
+           });
+          }
+          if (elem.name=='status'){
+           form.val('formfirewalld', {
+               'status': old_checked,
+           });
+          }
+                }
+            })
+       }, function(){
+          if (elem.name=='ping'){
+           form.val('formfirewalld', {
+               'ping': old_checked,
+           });
+          }
+          if (elem.name=='status'){
+           form.val('formfirewalld', {
+               'status': old_checked,
+           });
+          }
+
+      }
+      );
+
+   }) ;
+})

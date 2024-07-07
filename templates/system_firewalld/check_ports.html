@@ -1,0 +1,129 @@
+{% extends 'system_firewalld/layout_firewalld.html' %}
+
+{% block js_code %}
+{{ block.super }}
+<script>
+layui.use(['layer'], function(){
+    var $=layui.$;
+    var layer = layui.layer;
+    var form = layui.form;
+
+form.on('checkbox(masterCheckbox)', function(data){
+    var isChecked = data.elem.checked;
+    $('.sub_checkbox').each(function(){
+        $(this).prop('checked', isChecked);
+    });
+    form.render('checkbox');
+});
+
+  $('.layui-btn-del').on('click', function(event) {
+    event.preventDefault();
+    var url = $(this).data('url');
+    layer.confirm('确定要删除吗？', {
+      title: '删除确认',
+      icon: 3,
+      closeBtn: 0,
+      btn: ['确定', '取消']
+    }, function(index){
+      window.location.href = url;
+      layer.close(index);
+    }, function(){
+    });
+  });
+});
+</script>
+{% endblock %}
+
+
+{% block card_content %}
+{% include 'include_messages.html' %}
+<div class="card card-gray card-tabs">
+  <div class="card-header p-0 border-bottom-0">
+    <ul class="nav nav-tabs" id="custom-tabs-four-tab" role="tablist">
+      <li class="nav-item">
+<a class="nav-link{% if type_at == 1 %} active{% endif %}" href="{% url 'module_system:system_firewalld:check_ports' 1 %}">
+            未同步到系统的端口 <span class="right badge badge-warning text-sm">{{ check_sys_count }}</span>
+        </a>
+      </li>
+      <li class="nav-item">
+<a class="nav-link{% if type_at == 2 %} active{% endif %}" href="{% url 'module_system:system_firewalld:check_ports' 2 %}" >
+    未同步到面板的端口 <span class="right badge badge-warning text-sm">{{ check_panel_count }}</span>
+</a>
+      </li>
+    </ul>
+  </div>
+  <div class="card-body p-0">
+<form  class="layui-form" lay-filter="form_list">
+<table class="table table-bordered table-sm table-striped table-hover">
+    <tr>
+{#        <th class="text-center"><input type="checkbox" lay-filter="masterCheckbox"></th>#}
+        <th>协议</th>
+        <th>端口</th>
+        <th>策略</th>
+        <th>指定IP</th>
+        <th>描述</th>
+        <th>操作</th>
+    </tr>
+{% for port in page_obj %}
+    <tr>
+{#        <td class="text-center"><input type="checkbox" name="value_list" class="sub_checkbox" value="{{ port.id }}"></td>#}
+        <td class="align-middle">{{ port.protocol }}</td>
+        <td class="align-middle">{{ port.ports }}</td>
+        <td class="align-middle">
+            {% if port.types == 'accept' %}<span class="text-success">允许</span>{% endif %}
+            {% if port.types == 'drop' %}<span class="text-red">拒绝</span>{% endif %}
+        </td>
+        <td>{{ port.address }}</td>
+        <td>{{ port.description }}</td>
+        <td class="align-middle">
+    {% if type_at == 1 %}
+    <a href="{% url 'module_system:system_firewalld:sync_ports' type_at port.id %}" class="btn btn-link btn-sm">
+        同步到系统
+    </a>
+    {% endif %}
+            {% if type_at == 2 %}<a href="{% url 'module_system:system_firewalld:sync_ports' type_at port.id %}">同步到面板</a>{% endif %}
+            {% if type_at == 1 %}
+<a href="javascript:;" data-url="{% url 'module_system:system_firewalld:sync_ports_del' type_at port.id %}" class="layui-btn-del">删除</a>
+            {% endif %}
+        </td>
+    </tr>
+{% endfor %}
+</table>
+<div class="row p-2">
+    <div class="col-sm-12 col-md-5">
+        <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">
+{{ paginator.count }} 条记录 共 {{ page_obj.number }} / {{ paginator.num_pages }} 页
+        </div>
+    </div>
+
+    <div class="col-sm-12 col-md-7">
+    {% if page_obj.has_other_pages %}
+        <div class="dataTables_paginate paging_simple_numbers  float-right" id="example2_paginate">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="paginate_button page-item previous" id="example2_previous">
+    <a href="?page={{ page_obj.previous_page_number }}" aria-controls="example2" data-dt-idx="0" tabindex="0" class="page-link">上页</a>
+                </li>
+                {% endif %}
+{% for page in paginator.get_elided_page_range %}
+        <li class="paginate_button page-item {% if page == page_obj.number %}active{% endif %}">
+            <a href="?page={{ page }}" aria-controls="example2" data-dt-idx="1" tabindex="0" class="page-link">{{ page }}</a>
+        </li>
+{% endfor %}
+{% if page_obj.has_next %}
+    <li class="paginate_button page-item next" id="example2_next">
+        <a href="?page={{ page_obj.next_page_number }}" aria-controls="example2" data-dt-idx="7" tabindex="0" class="page-link">下页</a>
+    </li>
+{% endif %}
+            </ul>
+        </div>
+    {% endif %}
+    </div>
+
+</div>
+</form>
+
+  </div>
+
+</div>
+{% endblock %}

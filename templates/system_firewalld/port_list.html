@@ -1,0 +1,130 @@
+{% extends 'system_firewalld/layout_firewalld.html' %}
+
+{% block js_code %}
+{{ block.super }}
+<script>
+layui.use(['layer'], function(){
+    var layer = layui.layer;
+    var form = layui.form;
+
+  $('.layui-btn-del').on('click', function(event) {
+    event.preventDefault();
+    var url = $(this).data('url');
+    layer.confirm('确定要删除吗？', {
+      title: '删除确认',
+      icon: 3,
+      closeBtn: 0,
+      btn: ['确定', '取消']
+    }, function(index){
+      window.location.href = url;
+      layer.close(index);
+    }, function(){
+    });
+  });
+
+  form.verify({
+    ipOrIps: function(value, item) {
+      // 正则表达式匹配单个IP地址
+      var singleIpRegex = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
+      // 分割以逗号分隔的IP列表
+      var ips = value.split(',');
+
+      // 遍历每个IP进行验证
+      for (var i = 0; i < ips.length; i++) {
+        if (!singleIpRegex.test(ips[i].trim())) {
+          return '请输入有效的IP地址或以逗号分隔的多个IP地址';
+        }
+      }
+    }
+  });
+
+});
+</script>
+{% endblock %}
+
+
+{% block card_content %}
+{% include 'include_messages.html' %}
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+<a href="{% url 'module_system:system_firewalld:port_create' %}" class="btn btn-success">创建端口规则</a>
+        </div>
+        <div class="card-tools">
+<a href="{% url 'module_system:system_firewalld:check_ports' 1 %}" class="btn btn-outline-info">检测端口同步</a>
+        </div>
+
+    </div>
+    <div class="card-body p-0">
+<form  class="layui-form">
+<table class="table table-bordered table-sm table-striped table-hover">
+    <tr>
+{#        <th class="text-center"><input type="checkbox"></th>#}
+        <th>协议</th>
+        <th>端口</th>
+{#        <th>状态</th>#}
+        <th>策略</th>
+        <th>指定IP</th>
+        <th>描述</th>
+        <th>最后修改</th>
+        <th>操作</th>
+    </tr>
+{% for port in page_obj %}
+    <tr>
+{#        <td class="text-center"><input type="checkbox"></td>#}
+        <td class="align-middle">{{ port.protocol }}</td>
+        <td class="align-middle">{{ port.ports }}</td>
+{#        <td class="align-middle"></td>#}
+        <td class="align-middle">
+            {% if port.types == 'accept' %}<span class="text-success">允许</span>{% endif %}
+            {% if port.types == 'drop' %}<span class="text-red">拒绝</span>{% endif %}
+        </td>
+        <td class="align-middle">{{ port.address|default:'所有IP' }}</td>
+        <td class="align-middle">{{ port.description }}</td>
+        <td class="align-middle">{{ port.create_at }}</td>
+        <td class="align-middle">
+<a href="{% url 'module_system:system_firewalld:port_edit' port.pk %}" class="btn btn-link btn-sm">编辑</a>
+<a href="javascript:;" data-url="{% url 'module_system:system_firewalld:port_delete' port.pk %}"
+   class="layui-btn-del btn btn-link btn-sm">删除</a>
+        </td>
+    </tr>
+{% endfor %}
+</table>
+<div class="row p-2">
+<div class="col-sm-12 col-md-5">
+        <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">
+{{ paginator.count }}条记录 共 {{ page_obj.number }} / {{ paginator.num_pages }} 页
+        </div>
+    </div>
+
+    <div class="col-sm-12 col-md-7">
+    {% if page_obj.has_other_pages %}
+        <div class="dataTables_paginate paging_simple_numbers  float-right" id="example2_paginate">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="paginate_button page-item previous" id="example2_previous">
+    <a href="?page={{ page_obj.previous_page_number }}" aria-controls="example2" data-dt-idx="0" tabindex="0" class="page-link">上页</a>
+                </li>
+                {% endif %}
+{% for page in paginator.get_elided_page_range %}
+        <li class="paginate_button page-item {% if page == page_obj.number %}active{% endif %}">
+            <a href="?page={{ page }}" aria-controls="example2" data-dt-idx="1" tabindex="0" class="page-link">{{ page }}</a>
+        </li>
+{% endfor %}
+{% if page_obj.has_next %}
+    <li class="paginate_button page-item next" id="example2_next">
+        <a href="?page={{ page_obj.next_page_number }}" aria-controls="example2" data-dt-idx="7" tabindex="0" class="page-link">下页</a>
+    </li>
+{% endif %}
+            </ul>
+        </div>
+    {% endif %}
+    </div>
+
+</div>
+</form>
+    </div>
+</div>
+
+{% endblock %}

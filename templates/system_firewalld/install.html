@@ -1,0 +1,45 @@
+{% extends 'layout_panel.html' %}
+{% load static %}
+
+{% block js_code %}
+
+<script type="text/javascript">
+    function runsetup(){
+        $('#btn_run').css('display', 'none');
+        $('#showprocess').css('display', 'none');
+        $('#runinfo').html('').append('<p>开始安装，请耐心等待。</p><p>' +
+            '<i class="fas fa-3x fa-sync-alt fa-spin"></i></p>');
+        $.ajax({
+            type: 'get',
+            url: '{% url 'module_system:system_firewalld:install-run' %}',
+            success: function(result){
+                $('#runinfo').html('');
+                if (result.run_end == '0'){
+                    $('#runinfo').append('<p class="mt-3">安装完成!<a href="{% url 'module_system:system_firewalld:port-list' %}">返回端口管理</a></p>');
+                }else{
+                    $('#runinfo').append('<p class="mt-3">安装失败,请检查安装日志排除错误~</p>');
+                }
+                $('#showprocess').css('display', '');
+                $('#showprocess').html('');
+                $('#showprocess').html(result.showprocess);
+            },
+            error: function (){
+                $('#runinfo').html('');
+                $('#runinfo').append('<p>提交有故障!~</p>');
+             }
+        })
+    }
+</script>
+{% endblock %}
+
+
+{% block pagecontent %}
+<div class="card">
+    <div class="card-body">
+        <button type="button" class="btn btn-warning ml-2" id="btn_run" onclick="runsetup();">开始安装</button>
+        <div id="runinfo"></div>
+        <div style="overflow:auto;width:100%;height:300px;background:#000000;color:#FFFFFF;padding:5px;display: none" id="showprocess">
+        </div>
+    </div>
+</div>
+{% endblock %}

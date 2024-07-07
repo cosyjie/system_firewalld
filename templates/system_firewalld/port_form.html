@@ -1,0 +1,90 @@
+{% extends 'system_firewalld/layout_firewalld.html' %}
+{% load appcommon_html %}
+
+{% block js_code %}
+{{ block.super }}
+<script>
+layui.use(['layer'], function(){
+    var $=layui.$;
+    var form = layui.form;
+    var layer = layui.layer;
+
+    form.on('select(select_source)', function(data){
+        var elem = data.elem; // 获得 select 原始 DOM 对象
+        var value = data.value; // 获得被选中的值
+        var othis = data.othis; // 获得 select 元素被替换后的 jQuery 对象
+        if (value == 'ip'){
+            $('#div_address').attr('class', 'layui-show');
+        }else{
+            $('#div_address').attr('class', 'layui-hide');
+        }
+
+    });
+})
+</script>
+
+{% endblock %}
+
+{% block card_content %}
+{% include 'include_messages.html' %}
+<div class="card">
+<form class="layui-form " method="post">{% csrf_token %}
+    <div class="card-body">
+  <div class="layui-form-item">
+    <label class="layui-form-label">{{ form.protocol.label }}</label>
+    <div class="layui-col-md3">{{ form.protocol }}</div>
+  </div>
+
+  <div class="layui-form-item">
+        <label class="layui-form-label">{{ form.ports.label }}</label>
+        <div class="layui-col-md10">
+            {% if form.ports.initial %}<h5 class="text-red">{{ form.ports.value }}</h5>
+                <input type="hidden" id="id_ports" name="ports" value="{{ form.ports.value }}" />
+            {% else %}{{ form.ports }}
+                <div class="layui-text-em">
+                    <ul class="list-unstyled">
+                      <li>端口号介于 0-65535 之间。</li>
+                      <li>同时添加多个端口，如：8080,8081</li>
+                      <li>添加范围端口，如：8080-8089</li>
+                    </ul>
+                </div>
+            {% endif %}
+
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">{{ form.ip_source.label }}</label>
+    <div class="layui-col-md3">{{ form.ip_source }}</div>
+  </div>
+
+  <div class="layui-form-item {% if form.address.value %}{% else %}layui-hide{% endif %}" id="div_address">
+    <label class="layui-form-label">{{ form.address.label }}</label>
+    <div class="layui-col-md10">{{ form.address }}
+         <div class="layui-text-em">
+                <ul class="list-unstyled">
+                  <li>多个IP请使用逗号分隔，如:192.168.1.1,192.168.1.2</li>
+                  <li>暂不支持添加IP段</li>
+                </ul>
+        </div>
+    </div>
+  </div>
+
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">{{ form.types.label }}</label>
+    <div class="layui-col-md3">{{ form.types }}</div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">{{ form.description.label }}</label>
+    <div class="layui-col-md5">{{ form.description }}</div>
+  </div>
+
+    </div>
+    <div class="card-footer">
+{%  form_btn 'submit' %}
+    </div>
+    </div>
+</form>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'layout_panel.html' %}
+
+{% block css_code %}
+ <style>
+    .firewalld_status .layui-form-switch{
+        margin-top: 0;
+        margin-left: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block js_code %}
+<script>
+{% include 'system_firewalld/status_js.html' %}
+</script>
+{% endblock %}
+
+{% block pagecontent %}
+{% if running == '0' %}
+<div class="layui-panel p-3 text-danger">
+    检测到没有安装 Firewalld 防火墙！<a href="{% url 'module_system:system_firewalld:install' %}" >现在安装</a>
+</div>
+{% else %}
+
+<form class="layui-form" action="" lay-filter="formfirewalld">
+    <div class="card">
+        <div class="card-header layui-form">
+    <table class="firewalld_status">
+        <tr>
+            <td class="text-bold">防火墙状态</td>
+            <td>
+                <input type="checkbox" name="status" value="1" lay-skin="switch" lay-filter="switchTest"
+                     title="开启|关闭" {% if running == '1' %}checked{% endif %}>
+            </td>
+    {% if running == '1' %}
+            <td>
+<button href="{% url 'module_system:system_firewalld:firewalld_action' %}?action=2" class="btn btn-xs btn-outline-info ml-2">重载</button>
+<button href="{% url 'module_system:system_firewalld:firewalld_action' %}?action=3" class="btn btn-xs btn-outline-info ml-2">重启</button>
+            </td>
+    {% endif %}
+        <td width="20px"></td>
+        <td class="text-bold">禁ping</td>
+        <td>
+              <input type="checkbox" name="ping" lay-skin="switch" lay-filter="switchTest"
+                     title="开启|关闭" {% if ping == '1' %}checked{% endif %}>
+        </td>
+        </tr>
+    </table>
+        </div>
+    </div>
+</form>
+
+{% if running == '1' %}
+    {% block card_content %}{% endblock %}
+{% endif %}
+{% endif %}
+{% endblock %}
